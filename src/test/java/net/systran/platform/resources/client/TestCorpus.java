@@ -47,32 +47,35 @@ public class TestCorpus {
     @Test
     public void testResourcesCorpusAddPost() throws ApiException, IOException {
         CorpusApi api = getCorpusApi();
-        String name = "testAddCorpus";
         String lang = "en";
-        CorpusAddResponse corpusAddResponse = api.resourcesCorpusAddPost(name, lang, null, null);
-        System.out.println(corpusAddResponse.toString());
+        String name = "testAddCorpus";
+        System.out.println("Enter a new corpus name and uncomment below codes to test");
+        //CorpusAddResponse corpusAddResponse = api.resourcesCorpusAddPost(name, lang, null, null);
+        //System.out.println(corpusAddResponse.toString());
     }
 
     @Test
     public void testResourcesCorpusImportPost() throws ApiException, IOException {
         CorpusApi api = getCorpusApi();
-        String name = "testImport";
         String input = "#TM\n" +
                 "#EN\tFR\n" +
                 "This is a test \t Ceci est un test";
         String format = "text/bitext";
-        CorpusImportResponse corpusImportResponse = api.resourcesCorpusImportPost(name, input, null, format, null, null);
-        System.out.println(corpusImportResponse.toString());
+        String name = "testImport";
+        System.out.println("Enter a new corpus name and uncomment below codes to test");
+        //CorpusImportResponse corpusImportResponse = api.resourcesCorpusImportPost(name, input, null, format, null, null);
+        //System.out.println(corpusImportResponse.toString());
     }
 
     @Test
     public void testResourcesCorpusImportPostWithFile() throws ApiException, IOException {
         CorpusApi api = getCorpusApi();
-        String name = "testFileImport";
         File inputFile = new File(".//src//test//java//net//systran//platform//resources//client//corpus.txt");
         String format = "text/bitext";
-        CorpusImportResponse corpusImportResponse = api.resourcesCorpusImportPost(name, null, inputFile, format, null, null);
-        System.out.println(corpusImportResponse.toString());
+        String name = "testFileImport";
+        System.out.println("Enter a new corpus name and uncomment below codes to test");
+        //CorpusImportResponse corpusImportResponse = api.resourcesCorpusImportPost(name, null, inputFile, format, null, null);
+        //System.out.println(corpusImportResponse.toString());
     }
 
     @Test

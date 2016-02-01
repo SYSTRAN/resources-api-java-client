@@ -63,6 +63,7 @@ public class TestDictionary {
         dictionaryAddInput.setName("testJavaClient");
         dictionaryAddInput.setSourceLang("en");
         dictionaryAddInput.setTargetLangs("fr");
+        dictionaryAddInput.setType("UD");
         dictionaryAddInput.setComments("This is a dictionary created for client java test");
 
         DictionaryAddBody dictionaryAddBody = new DictionaryAddBody();
