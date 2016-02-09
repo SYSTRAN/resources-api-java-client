@@ -8,8 +8,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import static junit.framework.TestCase.assertNotNull;
 
+import org.junit.runners.MethodSorters;
+import org.junit.FixMethodOrder;
+
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestDictionary {
+    public static String dictionaryId;
+
     public static DictionaryApi getDictionaryApi() throws IOException {
         ApiClient apc = new ApiClient();
         ApiKeyAuth apiKeyAuth = (ApiKeyAuth) apc.getAuthentication("apiKey");
@@ -18,15 +25,42 @@ public class TestDictionary {
         return new DictionaryApi(apc);
     }
 
+    public String getDictionaryId () throws IOException, ApiException {
+        if (dictionaryId == null) {
+            dictionaryId = getDictionaryIdByName("javaClientTest");
+        }
+        return dictionaryId;
+    }
+
+    public void setDictionaryId (String id) {
+        dictionaryId = id;
+    }
+
+    public String getDictionaryIdByName(String name) throws IOException, ApiException {
+        DictionaryApi api = getDictionaryApi();
+        DictionariesListMatchFilter dictionariesListMatchFilter = new DictionariesListMatchFilter();
+        dictionariesListMatchFilter.setRegexName(name);
+
+        DictionariesListFilters dictionariesListFilters = new DictionariesListFilters();
+        dictionariesListFilters.setMatch(dictionariesListMatchFilter);
+
+        DictionariesListResponse dictionariesListResponse = api.resourcesDictionaryListPost(dictionariesListFilters);
+        String id = null;
+        if (dictionariesListResponse.getDictionaries().size() > 0) {
+            id = dictionariesListResponse.getDictionaries().get(0).getId();
+        }
+        return id;
+    }
+
     @Test
-    public void testResourcesLookupSupportedLanguagesGet() throws ApiException, IOException {
+    public void test11ResourcesLookupSupportedLanguagesGet() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         LookupSupportedLanguageResponse lookupSupportedLanguageResponse = api.resourcesDictionaryLookupSupportedLanguagesGet(null, null, null);
         System.out.println(lookupSupportedLanguageResponse.toString());
     }
 
     @Test
-    public void testResourcesLookupGet() throws ApiException, IOException {
+    public void test12ResourcesLookupGet() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         String source = "en";
         String target = "fr";
@@ -38,7 +72,7 @@ public class TestDictionary {
     }
 
     @Test
-    public void testResourcesLookupGetWithAutoComplete() throws ApiException, IOException {
+    public void test13ResourcesLookupGetWithAutoComplete() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         String source = "en";
         String target = "fr";
@@ -50,34 +84,37 @@ public class TestDictionary {
     }
 
     @Test
-    public void testResourcesDictionaryListPost() throws ApiException, IOException {
+    public void test21ResourcesDictionaryListPost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         DictionariesListResponse dictionariesListResponse = api.resourcesDictionaryListPost(null);
         System.out.println(dictionariesListResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryAddPost() throws ApiException, IOException {
+    public void test22ResourcesDictionaryAddPost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         DictionaryAddInput dictionaryAddInput = new DictionaryAddInput();
-        dictionaryAddInput.setName("testJavaClient");
+        dictionaryAddInput.setName("javaClientTest");
         dictionaryAddInput.setSourceLang("en");
         dictionaryAddInput.setTargetLangs("fr");
         dictionaryAddInput.setType("UD");
-        dictionaryAddInput.setComments("This is a dictionary created for client java test");
+        dictionaryAddInput.setComments("This is a dictionary created for java client testing purposes");
 
         DictionaryAddBody dictionaryAddBody = new DictionaryAddBody();
         dictionaryAddBody.setDictionary(dictionaryAddInput);
 
         DictionaryAddResponse dictionaryAddResponse = api.resourcesDictionaryAddPost(dictionaryAddBody);
+        String dictionaryId = dictionaryAddResponse.getAdded().getId();
+        assertNotNull(dictionaryId);
+        setDictionaryId(dictionaryId);
         System.out.println(dictionaryAddResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryListPostWithMatchFilter() throws ApiException, IOException {
+    public void test23ResourcesDictionaryListPostWithMatchFilter() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
         DictionariesListMatchFilter dictionariesListMatchFilter = new DictionariesListMatchFilter();
-        dictionariesListMatchFilter.setRegexName("test");
+        dictionariesListMatchFilter.setRegexName("javaClientTest");
 
         DictionariesListFilters dictionariesListFilters = new DictionariesListFilters();
         dictionariesListFilters.setMatch(dictionariesListMatchFilter);
@@ -87,7 +124,7 @@ public class TestDictionary {
     }
 
     @Test
-    public void testResourcesDictionaryListPostWithSortFilter() throws ApiException, IOException {
+    public void test24ResourcesDictionaryListPostWithSortFilter() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
 
         DictionariesListSortFilter dictionariesListSortFilter = new DictionariesListSortFilter();
@@ -101,26 +138,33 @@ public class TestDictionary {
     }
 
     @Test
-    public void testResourcesDictionaryUpdatePostOnlyComments() throws ApiException, IOException {
+    public void test31ResourcesDictionaryUpdatePostOnlyComments() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to update");
+            return;
+        }
         DictionaryUpdateInput dictionaryUpdateInput = new DictionaryUpdateInput();
         dictionaryUpdateInput.setComments("This dictionary has been updated for client java test");
 
         DictionaryUpdateBody dictionaryUpdateBody = new DictionaryUpdateBody();
         dictionaryUpdateBody.setDictionary(dictionaryUpdateInput);
 
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //DictionaryUpdateResponse dictionaryUpdateResponse = api.resourcesDictionaryUpdatePost(dictionaryId, dictionaryUpdateBody);
-        //System.out.println(dictionaryUpdateResponse.toString());
+        DictionaryUpdateResponse dictionaryUpdateResponse = api.resourcesDictionaryUpdatePost(dictionaryId, dictionaryUpdateBody);
+        System.out.println(dictionaryUpdateResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryUpdatePost() throws ApiException, IOException {
+    public void test32ResourcesDictionaryUpdatePost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to update");
+            return;
+        }
         DictionaryUpdateInput dictionaryUpdateInput = new DictionaryUpdateInput();
-        dictionaryUpdateInput.setName("testJavaClient");
+        dictionaryUpdateInput.setName("javaClientTestUpdatedName");
         dictionaryUpdateInput.setSourceLang("en");
         dictionaryUpdateInput.setTargetLangs("fr");
         dictionaryUpdateInput.setComments("This dictionary has been updated for client java test");
@@ -128,50 +172,48 @@ public class TestDictionary {
         DictionaryUpdateBody dictionaryUpdateBody = new DictionaryUpdateBody();
         dictionaryUpdateBody.setDictionary(dictionaryUpdateInput);
 
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //DictionaryUpdateResponse dictionaryUpdateResponse = api.resourcesDictionaryUpdatePost(dictionaryId, dictionaryUpdateBody);
-        //System.out.println(dictionaryUpdateResponse.toString());
+        DictionaryUpdateResponse dictionaryUpdateResponse = api.resourcesDictionaryUpdatePost(dictionaryId, dictionaryUpdateBody);
+        System.out.println(dictionaryUpdateResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryDeletePost() throws ApiException, IOException {
+    public void test41ResourcesDictionaryEntryListPost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55db168775314374575ae630";
-
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //api.resourcesDictionaryDeletePost(dictionaryId);
-        //System.out.println("dictionaryId " + dictionaryId + " has been deleted successfully");
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to list entry");
+            return;
+        }
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
+        System.out.println(entriesListResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryListPost() throws ApiException, IOException {
+    public void test42ResourcesDictionaryEntryListPostWithSortFilter() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
-
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
-        //System.out.println(entriesListResponse.toString());
-    }
-
-    @Test
-    public void testResourcesDictionaryEntryListPostWithSortFilter() throws ApiException, IOException {
-        DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to list entry");
+            return;
+        }
         EntriesListSortFilter entriesListSortFilter = new EntriesListSortFilter();
         entriesListSortFilter.setTarget(1); // sort by dictionary name in "ascending" order
 
         EntriesListFilters entriesListFilters = new EntriesListFilters();
         entriesListFilters.setSort(entriesListSortFilter);
 
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, entriesListFilters);
-        //System.out.println(entriesListResponse.toString());
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, entriesListFilters);
+        System.out.println(entriesListResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryListPostWithMatchFilter() throws ApiException, IOException {
+    public void test43ResourcesDictionaryEntryListPostWithMatchFilter() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to list entry");
+            return;
+        }
         EntriesListMatchFilter entriesListMatchFilter = new EntriesListMatchFilter();
         List<String> inTargetLanguages = new ArrayList<String>();
         inTargetLanguages.add("fr");
@@ -180,16 +222,18 @@ public class TestDictionary {
         EntriesListFilters entriesListFilters = new EntriesListFilters();
         entriesListFilters.setMatch(entriesListMatchFilter);
 
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, entriesListFilters);
-        //System.out.println(entriesListResponse.toString());
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, entriesListFilters);
+        System.out.println(entriesListResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryAddPost() throws ApiException, IOException {
+    public void test44ResourcesDictionaryEntryAddPost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
-
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to add entry");
+            return;
+        }
         EntryAddInput entryAddInput = new EntryAddInput();
         entryAddInput.setSourceLang("en");
         entryAddInput.setTargetLang("fr");
@@ -199,55 +243,81 @@ public class TestDictionary {
         EntryAddBody entryAddBody = new EntryAddBody();
         entryAddBody.setEntry(entryAddInput);
 
-        System.out.println("Use a valid 'dictionaryId' and uncomment below codes to test");
-        //EntryAddResponse entryAddResponse = api.resourcesDictionaryEntryAddPost(dictionaryId, entryAddBody);
-        //System.out.println(entryAddResponse.toString());
+        EntryAddResponse entryAddResponse = api.resourcesDictionaryEntryAddPost(dictionaryId, entryAddBody);
+        System.out.println(entryAddResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryUpdatePostForSource() throws ApiException, IOException {
+    public void test45ResourcesDictionaryEntryUpdatePostForSource() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
-
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to update entry");
+            return;
+        }
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
+        if (entriesListResponse.getEntries().size() == 0 || entriesListResponse.getEntries().get(0).getSourceId() == null) {
+            System.out.println("No entry found to update");
+            return;
+        }
+        String sourceId = entriesListResponse.getEntries().get(0).getSourceId();
         EntryUpdateInput entryUpdateInput = new EntryUpdateInput();
         entryUpdateInput.setSourceLang("en");
         entryUpdateInput.setTargetLang("fr");
         entryUpdateInput.setSource("home");
 
         EntryUpdateBody entryUpdateBody = new EntryUpdateBody();
-        entryUpdateBody.setSourceId("55c0aa3c75314374575ae4d6");
+        entryUpdateBody.setSourceId(sourceId);
         entryUpdateBody.setUpdate(entryUpdateInput);
 
-        System.out.println("Use a valid 'dictionaryId', 'sourceId' and uncomment below codes to test");
-        //EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
-        //System.out.println(entryUpdateResponse.toString());
+        EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
+        System.out.println(entryUpdateResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryUpdatePostForTarget() throws ApiException, IOException {
+    public void test46ResourcesDictionaryEntryUpdatePostForTarget() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
-
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to update entry");
+            return;
+        }
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
+        if (entriesListResponse.getEntries().size() == 0 || entriesListResponse.getEntries().get(0).getSourceId() == null) {
+            System.out.println("No entry found to update");
+            return;
+        }
+        String sourceId = entriesListResponse.getEntries().get(0).getSourceId();
+        String targetId = entriesListResponse.getEntries().get(0).getTargetId();
         EntryUpdateInput entryUpdateInput = new EntryUpdateInput();
         entryUpdateInput.setSourceLang("en");
         entryUpdateInput.setTargetLang("fr");
         entryUpdateInput.setTarget("batiment");
 
         EntryUpdateBody entryUpdateBody = new EntryUpdateBody();
-        entryUpdateBody.setSourceId("55c0aa3c75314374575ae4d6");
-        entryUpdateBody.setTargetId("55c0abdd75314374575ae4d7");
+        entryUpdateBody.setSourceId(sourceId);
+        entryUpdateBody.setTargetId(targetId);
         entryUpdateBody.setUpdate(entryUpdateInput);
 
-        System.out.println("Use a valid 'dictionaryId', 'sourceId', 'targetId' and uncomment below codes to test");
-        //EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
-        //System.out.println(entryUpdateResponse.toString());
+        EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
+        System.out.println(entryUpdateResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryUpdatePostForSourceAndTarget() throws ApiException, IOException {
+    public void test47ResourcesDictionaryEntryUpdatePostForSourceAndTarget() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
-
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to update entry");
+            return;
+        }
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
+        if (entriesListResponse.getEntries().size() == 0 || entriesListResponse.getEntries().get(0).getSourceId() == null) {
+            System.out.println("No entry found to update");
+            return;
+        }
+        String sourceId = entriesListResponse.getEntries().get(0).getSourceId();
+        String targetId = entriesListResponse.getEntries().get(0).getTargetId();
         EntryUpdateInput entryUpdateInput = new EntryUpdateInput();
         entryUpdateInput.setSourceLang("en");
         entryUpdateInput.setSource("home");
@@ -256,27 +326,62 @@ public class TestDictionary {
         entryUpdateInput.setTarget("batiment");
 
         EntryUpdateBody entryUpdateBody = new EntryUpdateBody();
-        entryUpdateBody.setSourceId("55c0aa3c75314374575ae4d6");
-        entryUpdateBody.setTargetId("55c0abdd75314374575ae4d7");
+        entryUpdateBody.setSourceId(sourceId);
+        entryUpdateBody.setTargetId(targetId);
         entryUpdateBody.setUpdate(entryUpdateInput);
 
-        System.out.println("Use a valid 'dictionaryId', 'sourceId', 'targetId' and uncomment below codes to test");
-        //EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
-        //System.out.println(entryUpdateResponse.toString());
+        EntryUpdateResponse entryUpdateResponse = api.resourcesDictionaryEntryUpdatePost(dictionaryId, entryUpdateBody);
+        System.out.println(entryUpdateResponse.toString());
     }
 
     @Test
-    public void testResourcesDictionaryEntryDeletePost() throws ApiException, IOException {
+    public void test51ResourcesDictionaryEntryDeletePost() throws ApiException, IOException {
         DictionaryApi api = getDictionaryApi();
-        String dictionaryId = "55c0a88275314374575ae4d4";
+        String dictionaryId = getDictionaryId();
+        if (dictionaryId == null) {
+            System.out.println("No dictionary id found to delete entry");
+            return;
+        }
+        EntriesListResponse entriesListResponse = api.resourcesDictionaryEntryListPost(dictionaryId, null);
+        if (entriesListResponse.getEntries().size() == 0 || entriesListResponse.getEntries().get(0).getSourceId() == null) {
+            System.out.println("No entry found to delete");
+            return;
+        }
+        String sourceId = entriesListResponse.getEntries().get(0).getSourceId();
         EntryDeleteInput entryDeleteInput = new EntryDeleteInput();
-        entryDeleteInput.setSourceId("55c0c6e775314374575ae4db");
+        entryDeleteInput.setSourceId(sourceId);
 
         EntryDeleteBody entryDeleteBody = new EntryDeleteBody();
         entryDeleteBody.setEntry(entryDeleteInput);
 
-        System.out.println("Use a valid 'dictionaryId', 'sourceId' and uncomment below codes to test");
-        //EntryDeleteResponse entryDeleteResponse = api.resourcesDictionaryEntryDeletePost(dictionaryId, entryDeleteBody);
-        //System.out.println(entryDeleteResponse.toString());
+        EntryDeleteResponse entryDeleteResponse = api.resourcesDictionaryEntryDeletePost(dictionaryId, entryDeleteBody);
+        System.out.println(entryDeleteResponse.toString());
+    }
+
+    @Test
+    public void test52ResourcesDictionaryDeletePost() throws ApiException, IOException {
+        DictionaryApi api = getDictionaryApi();
+        DictionariesListMatchFilter dictionariesListMatchFilter = new DictionariesListMatchFilter();
+        dictionariesListMatchFilter.setRegexName("javaClientTest");
+
+        DictionariesListFilters dictionariesListFilters = new DictionariesListFilters();
+        dictionariesListFilters.setMatch(dictionariesListMatchFilter);
+
+        DictionariesListResponse dictionariesListResponse = api.resourcesDictionaryListPost(dictionariesListFilters);
+        List<DictionaryOutput> dictionaries = dictionariesListResponse.getDictionaries();
+        if (dictionaries.size() == 0) {
+            System.out.println("No dictionary found to delete");
+            return;
+        }
+
+        int i = 0;
+        while (i < dictionaries.size()) {
+            String dictionaryId = dictionaries.get(i).getId();
+            if (dictionaryId != null) {
+                api.resourcesDictionaryDeletePost(dictionaryId);
+                System.out.println("dictionaryId " + dictionaryId + " has been deleted successfully");
+            }
+            i++;
+        }
     }
 }
